@@ -18,6 +18,15 @@ const tooltip = d3.select("body")
     .style("pointer-events", "none")
     .style("opacity", 0);
 
+// ASA Status Descriptions
+const asaDescriptions = {
+    "1": "ASA I (Green): Normal healthy patient.",
+    "2": "ASA II (Blue): Mild systemic disease.",
+    "3": "ASA III (Yellow): Severe systemic disease.",
+    "4": "ASA IV (Red): Severe systemic disease, constant threat to life.",
+    "all": "All ASA Classes: Showing all patient groups."
+};
+
 // Load data
 d3.json("data/clinical_data_viz.json").then(data => {
 
@@ -50,6 +59,9 @@ d3.json("data/clinical_data_viz.json").then(data => {
         const predictor = document.getElementById("predictor").value;
         const selectedASA = document.getElementById("asa").value;
         const selectedApproach = document.getElementById("approach").value;
+
+        // Update ASA description dynamically
+        document.getElementById("asa-description").innerHTML = `<strong>ASA Status:</strong> ${asaDescriptions[selectedASA]}`;
 
         // Filter data based on dropdown selections
         let filteredData = data.filter(d => 
