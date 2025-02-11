@@ -1,0 +1,13 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+label, select {
+    margin: 10px;
+}
+
+svg {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+}
