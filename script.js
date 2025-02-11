@@ -97,7 +97,6 @@ d3.json("data/clinical_data_viz.json").then(data => {
             .attr("r", 5)
             .attr("fill", d => d.color)
             .attr("opacity", 0.7)
-            // ✅ Restore hover functionality:
             .on("mouseover", function(event, d) {
                 tooltip.transition().duration(200).style("opacity", 1);
                 tooltip.html(`
