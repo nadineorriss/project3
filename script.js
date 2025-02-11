@@ -6,6 +6,18 @@ const svg = d3.select("svg")
     .attr("width", width)
     .attr("height", height);
 
+// Create a tooltip div (hidden initially)
+const tooltip = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "white")
+    .style("border", "1px solid black")
+    .style("border-radius", "5px")
+    .style("padding", "8px")
+    .style("font-size", "12px")
+    .style("pointer-events", "none")
+    .style("opacity", 0);
+
 // Load data
 d3.json("data/clinical_data_viz.json").then(data => {
 
@@ -14,8 +26,24 @@ d3.json("data/clinical_data_viz.json").then(data => {
     const yScale = d3.scaleLinear().range([height - margin.bottom, margin.top]);
 
     // Set up axes
-    const xAxis = svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`);
-    const yAxis = svg.append("g").attr("transform", `translate(${margin.left},0)`);
+    const xAxisGroup = svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`);
+    const yAxisGroup = svg.append("g").attr("transform", `translate(${margin.left},0)`);
+
+    // Axis labels
+    const xAxisLabel = svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height - 10)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Predictor");
+
+    const yAxisLabel = svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", margin.left - 40)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Length of Stay (LOS)");
 
     // Function to update the scatter plot
     function updateChart() {
@@ -30,12 +58,19 @@ d3.json("data/clinical_data_viz.json").then(data => {
         );
 
         // Update scales based on selected predictor
-        xScale.domain(d3.extent(filteredData, d => d[predictor])).nice();
+        if (predictor === "sex") {
+            xScale.domain(["M", "F"]);
+        } else {
+            xScale.domain(d3.extent(filteredData, d => d[predictor])).nice();
+        }
         yScale.domain(d3.extent(filteredData, d => d.los_postop)).nice();
 
         // Update axes
-        xAxis.call(d3.axisBottom(xScale));
-        yAxis.call(d3.axisLeft(yScale));
+        xAxisGroup.call(d3.axisBottom(xScale));
+        yAxisGroup.call(d3.axisLeft(yScale));
+
+        // Update axis labels
+        xAxisLabel.text(predictor.charAt(0).toUpperCase() + predictor.slice(1));
 
         // Bind data to circles
         const circles = svg.selectAll("circle")
@@ -48,8 +83,26 @@ d3.json("data/clinical_data_viz.json").then(data => {
             .attr("r", 5)
             .attr("fill", d => d.color)
             .attr("opacity", 0.7)
-            .append("title")
-            .text(d => `Age: ${d.age}, LOS: ${d.los_postop.toFixed(2)} days, Mortality: ${d.mortality_label}`);
+            .on("mouseover", function(event, d) { // Tooltip appears on hover
+                tooltip.transition().duration(200).style("opacity", 1);
+                tooltip.html(`
+                    <strong>Age:</strong> ${d.age} years<br>
+                    <strong>Sex:</strong> ${d.sex}<br>
+                    <strong>LOS:</strong> ${d.los_postop.toFixed(2)} days<br>
+                    <strong>ASA Status:</strong> ${d.asa}<br>
+                    <strong>Approach:</strong> ${d.approach}<br>
+                    <strong>Mortality:</strong> ${d.mortality_label}
+                `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mousemove", function(event) { // Move tooltip with cursor
+                tooltip.style("left", (event.pageX + 10) + "px")
+                       .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", function() { // Hide tooltip when mouse leaves
+                tooltip.transition().duration(200).style("opacity", 0);
+            });
 
         // Update existing circles
         circles
