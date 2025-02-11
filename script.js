@@ -89,13 +89,35 @@ d3.json("data/clinical_data_viz.json").then(data => {
 
         const circles = svg.selectAll("circle").data(filteredData, d => d.id);
 
-        circles.enter().append("circle")
+        circles.enter()
+            .append("circle")
             .merge(circles)
             .attr("cx", d => xScale(d[predictor]))
             .attr("cy", d => yScale(d.los_postop))
             .attr("r", 5)
             .attr("fill", d => d.color)
-            .attr("opacity", 0.7);
+            .attr("opacity", 0.7)
+            // ✅ Restore hover functionality:
+            .on("mouseover", function(event, d) {
+                tooltip.transition().duration(200).style("opacity", 1);
+                tooltip.html(`
+                    <strong>Age:</strong> ${d.age} years<br>
+                    <strong>Sex:</strong> ${d.sex}<br>
+                    <strong>LOS:</strong> ${d.los_postop.toFixed(2)} days<br>
+                    <strong>ASA Status:</strong> ${d.asa}<br>
+                    <strong>Approach:</strong> ${d.approach}<br>
+                    <strong>Mortality:</strong> ${d.mortality_label}
+                `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                       .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", function() {
+                tooltip.transition().duration(200).style("opacity", 0);
+            });
 
         circles.exit().remove();
     }
